@@ -12,11 +12,13 @@ function [ conf_mtx all_error ] = make_statistics( gt, predicated )
 
 % http://www.mathworks.com/help/stats/confusionmat.html
 fprintf('\nConfusion Matrix:\n');
+conf_mtx = confusionmat(gt, predicated);
 disp(conf_mtx);
 
-
+n = length(gt);
+true_pre = sum(diag(conf_mtx));
+all_error = 1 - true_pre/n;
 fprintf('\nThe overall error:%f\n', all_error);
-
 
 end
 

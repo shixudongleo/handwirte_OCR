@@ -79,7 +79,7 @@ switch classifier
         fprintf('\nUsing Bayes classifier. The Result:\n');
         [conf_mtx all_error] = make_statistics(test_y, y_bayes);
         [conf_mtx_m all_error_m] = make_statistics(test_y, y_bayes_m);
-        fprintf('\nImproved in error rate: %f', all_error - all_error_m);
+        fprintf('\nImproved in error rate: %f\n', all_error - all_error_m);
         
     case KNN
         fprintf('\nUsing KNN classifier. The Result:\n');
