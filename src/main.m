@@ -4,6 +4,10 @@
 % date      : 2014.02.06
 %---------------------------------------------------
 
+cd ../data;
+addpath(pwd);
+cd ../src;
+
 
 % (1) 
 % load data and construct training and testing data
