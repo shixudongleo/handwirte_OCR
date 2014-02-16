@@ -52,7 +52,7 @@ end
 BAYES = 'bayes';
 KNN = 'KNN';
 PARZEN_WINDOW = 'parzen window';
-classifier = BAYES;
+classifier = KNN;
 
 switch classifier
     case BAYES
@@ -62,6 +62,8 @@ switch classifier
         
     case KNN
         fprintf('\nUsing KNN classifier.\n');
+        knn_model = ClassificationKNN.fit(train_x, train_y);
+        knn_m_model = ClassificationKNN.fit(train_m_x, train_m_y);
         
     case PARZEN_WINDOW
         fprintf('\nUsing parzen window density estimation classifier.\n');
@@ -86,6 +88,8 @@ switch classifier
         
     case KNN
         fprintf('\nPredicate using KNN classifier.\n');
+        y_knn = predict(knn_model, test_x);
+        y_knn_m = predict(knn_m_model, test_x);
         
     otherwise
         fprintf('\nUnknown classifier\n');s
@@ -106,6 +110,9 @@ switch classifier
         
     case KNN
         fprintf('\nUsing KNN classifier. The Result:\n');
+        [conf_mtx all_error] = make_statistics(test_y, y_knn);
+        [conf_mtx_m all_error_m] = make_statistics(test_y, y_knn_m);
+        fprintf('\nImproved in error rate: %f\n', all_error - all_error_m);
         
     otherwise
         fprintf('\nUnknown classifier\n');s
