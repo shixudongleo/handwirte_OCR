@@ -19,10 +19,29 @@ cd ../src;
 % test_x    :   (n by d)  :  pixel feature vector for testing
 % test_y    :   (n by 1)  :  corresponding ground truth label for test_x
 
-[train_x train_y...
- train_m_x train_m_y...
- test_x test_y] = load_data();
-
+RAW_PIXEL = 'pixel';
+IMAGE_FEATURE = 'image feature';
+feature = RAW_PIXEL;
+switch feature 
+    case RAW_PIXEL
+        fprintf('\nUsing pixel raw feature.\n');
+        [train_x train_y...
+         train_m_x train_m_y...
+         test_x test_y] = load_data();
+     
+    case IMAGE_FEATURE
+        fprintf('\nUsing image related feature.\n');
+        [train_x train_y...
+         train_m_x train_m_y...
+         test_x test_y] = load_data();
+     
+        [train_x train_y] = feature_extraction(train_x, train_y);
+        [train_m_x train_m_y] = feature_extraction(train_m_x, train_m_y);
+        [test_x test_y] = feature_extraction(test_x, test_y);
+        
+    otherwise
+        fprintf('\nUnknown feature\n');s
+end
 
 
 %(2)
@@ -32,6 +51,7 @@ cd ../src;
 
 BAYES = 'bayes';
 KNN = 'KNN';
+PARZEN_WINDOW = 'parzen window';
 classifier = BAYES;
 
 switch classifier
@@ -43,8 +63,11 @@ switch classifier
     case KNN
         fprintf('\nUsing KNN classifier.\n');
         
+    case PARZEN_WINDOW
+        fprintf('\nUsing parzen window density estimation classifier.\n');
+        
     otherwise
-        fprintf('\nUnknown classifier\n');s
+        fprintf('\nUnknown classifier\n');
 end
 
 
