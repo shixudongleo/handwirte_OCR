@@ -12,7 +12,7 @@ function [ Mu Sigma ] = bayes_mv_train(x, y)
 [coff pca] = princomp(x);
 
 label = 0:9;
-dim = 100;
+dim = 300;
 
 Mu = zeros(length(label), dim);
 Sigma = ones(length(label), dim);

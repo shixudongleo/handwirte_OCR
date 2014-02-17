@@ -21,7 +21,7 @@ cd ../src;
 
 RAW_PIXEL = 'pixel';
 IMAGE_FEATURE = 'image feature';
-feature = RAW_PIXEL;
+feature = IMAGE_FEATURE;
 switch feature 
     case RAW_PIXEL
         fprintf('\nUsing pixel raw feature.\n');
@@ -40,7 +40,7 @@ switch feature
         [test_x test_y] = feature_extraction(test_x, test_y);
         
     otherwise
-        fprintf('\nUnknown feature\n');s
+        fprintf('\nUnknown feature\n');
 end
 
 
@@ -92,7 +92,7 @@ switch classifier
         y_knn_m = predict(knn_m_model, test_x);
         
     otherwise
-        fprintf('\nUnknown classifier\n');s
+        fprintf('\nUnknown classifier\n');
 end
 
 
@@ -115,7 +115,7 @@ switch classifier
         fprintf('\nImproved in error rate: %f\n', all_error - all_error_m);
         
     otherwise
-        fprintf('\nUnknown classifier\n');s
+        fprintf('\nUnknown classifier\n');
 end
 
 
