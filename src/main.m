@@ -35,9 +35,9 @@ switch feature
          train_m_x train_m_y...
          test_x test_y] = load_data();
      
-        [train_x train_y] = feature_extraction(train_x, train_y);
-        [train_m_x train_m_y] = feature_extraction(train_m_x, train_m_y);
-        [test_x test_y] = feature_extraction(test_x, test_y);
+        [train_x train_y] = feature_extraction(train_x, train_y, 'train_fv.mat');
+        [train_m_x train_m_y] = feature_extraction(train_m_x, train_m_y, 'train_fv_m.mat');
+        [test_x test_y] = feature_extraction(test_x, test_y, 'test_fv.mat');
         
     otherwise
         fprintf('\nUnknown feature\n');
