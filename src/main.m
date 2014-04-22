@@ -9,8 +9,7 @@ addpath(pwd);
 cd ../src;
 
 
-% (1) 
-% load data and construct training and testing data
+% prepare data for training and testing
 % parameters:
 % train_x   :   (n by d)  :  pixel feature samples for training
 % train_y   :   (n by 1)  :  corresponding label for train_x
@@ -19,108 +18,154 @@ cd ../src;
 % test_x    :   (n by d)  :  pixel feature vector for testing
 % test_y    :   (n by 1)  :  corresponding ground truth label for test_x
 
-RAW_PIXEL = 'pixel';
-IMAGE_FEATURE = 'image feature';
-feature = IMAGE_FEATURE;
-switch feature 
-    case RAW_PIXEL
-        fprintf('\nUsing pixel raw feature.\n');
-        [train_x train_y...
-         train_m_x train_m_y...
-         test_x test_y] = load_data();
-     
-    case IMAGE_FEATURE
-        fprintf('\nUsing image related feature.\n');
-        [train_x train_y...
-         train_m_x train_m_y...
-         test_x test_y] = load_data();
-     
-        [train_x train_y] = feature_extraction(train_x, train_y, 'train_fv.mat');
-        [train_m_x train_m_y] = feature_extraction(train_m_x, train_m_y, 'train_fv_m.mat');
-        [test_x test_y] = feature_extraction(test_x, test_y, 'test_fv.mat');
-        
-    otherwise
-        fprintf('\nUnknown feature\n');
-end
+fprintf('load raw pixel feature.\n');
+[train_x train_y train_m_x train_m_y test_x test_y] = load_data();
+
+fprintf('load gradient feature.\n');
+[g_train_x g_train_y] = feature_extraction(train_x, train_y, 'train_fv.mat');
+[g_train_m_x g_train_m_y] = feature_extraction(train_m_x, train_m_y, 'train_fv_m.mat');
+[g_test_x g_test_y] = feature_extraction(test_x, test_y, 'test_fv.mat');
 
 
-%(2)
-% training model and get model parameters
-% input     :   training data
-% output    :   model paremeter
+%%
+% (1) Design a Bayes classifier using the training set, 
+%     and evaluate its performance on the test set.
+% using PCA to avoid singularity problem 
+max_PCs = 200;
+[T] = PCA(train_x, max_PCs);
+PCA_train_x = train_x*T;
+PCA_test_x = test_x*T;
 
-BAYES = 'bayes';
-KNN = 'KNN';
-PARZEN_WINDOW = 'parzen window';
-classifier = KNN;
+% training
+fprintf('\nUsing Bayes classifier.\n');
+[Mu Sigma] = bayes_mv_train(PCA_train_x(:, 1:58), train_y);
 
-switch classifier
-    case BAYES
-        fprintf('\nUsing Bayes classifier.\n');
-        [Mu Sigma] = bayes_mv_train(train_x, train_y);
-        [Mu_m Sigma_m] = bayes_mv_train(train_m_x, train_m_y);
-        
-    case KNN
-        fprintf('\nUsing KNN classifier.\n');
-        knn_model = ClassificationKNN.fit(train_x, train_y);
-        knn_m_model = ClassificationKNN.fit(train_m_x, train_m_y);
-        
-    case PARZEN_WINDOW
-        fprintf('\nUsing parzen window density estimation classifier.\n');
-        
-    otherwise
-        fprintf('\nUnknown classifier\n');
-end
+% testing
+fprintf('\nPredicate using Bayes classifier.\n');
+y_bayes = bayes_mv_predicate(PCA_test_x(:, 1:58), Mu, Sigma);
+
+% show statistics 
+fprintf('\nUsing Bayes classifier. The Result:\n');
+[conf_mtx all_error] = make_statistics(test_y, y_bayes);
+
+
+% accuracy = zeros(1, max_PCs);
+% for ii = 1:max_PCs
+% % training
+% fprintf('\nUsing Bayes classifier.\n');
+% [Mu Sigma] = bayes_mv_train(PCA_train_x(:, 1:ii), train_y);
+% 
+% % testing
+% fprintf('\nPredicate using Bayes classifier.\n');
+% y_bayes = bayes_mv_predicate(PCA_test_x(:, 1:ii), Mu, Sigma);
+% 
+% % show statistics 
+% fprintf('\nUsing Bayes classifier. The Result:\n');
+% [conf_mtx all_error] = make_statistics(test_y, y_bayes);
+% accuracy(ii) = all_error;
+% end
 
 
 
+%%
+% (2) Design a k-nearest neighbor classifier, 
+%     and evaluate its performance on the test set.
+% training
+fprintf('\nUsing KNN classifier.\n');
+knn_model = ClassificationKNN.fit(train_x, train_y, 'NumNeighbors', 5);
 
-%(3)
-% predicate using trained classifier
-% input     :   test data
-% ouput     :   predicate label for test data
+% testing
+fprintf('\nPredicate using KNN classifier.\n');
+y_knn = predict(knn_model, test_x);
 
-switch classifier
-    case BAYES
-        fprintf('\nPredicate using Bayes classifier.\n');
-        y_bayes = bayes_mv_predicate(test_x, Mu, Sigma);
-        y_bayes_m = bayes_mv_predicate(test_x, Mu_m, Sigma_m);
-        
-    case KNN
-        fprintf('\nPredicate using KNN classifier.\n');
-        y_knn = predict(knn_model, test_x);
-        y_knn_m = predict(knn_m_model, test_x);
-        
-    otherwise
-        fprintf('\nUnknown classifier\n');
-end
+% show result
+fprintf('\nUsing KNN classifier. The Result:\n');
+[conf_mtx all_error] = make_statistics(test_y, y_knn);
+
+% K = 50;
+% accuracy = zeros(1, K);
+% for ii = 1:K
+% % training
+% fprintf('\nUsing KNN classifier.\n');
+% knn_model = ClassificationKNN.fit(train_x, train_y, 'NumNeighbors', ii);
+% 
+% % testing
+% fprintf('\nPredicate using KNN classifier.\n');
+% y_knn = predict(knn_model, test_x);
+% 
+% % show result
+% fprintf('\nUsing KNN classifier. The Result:\n');
+% [conf_mtx all_error] = make_statistics(test_y, y_knn);
+% accuracy(ii) = all_error;
+% end
+
+%%
+% (3) above two method using more training data
+max_PCs = 58;
+[T] = PCA(train_m_x, max_PCs);
+PCA_train_m_x = train_m_x*T;
+PCA_test_x = test_x*T;
+
+% training
+fprintf('\nUsing Bayes classifier.\n');
+[Mu Sigma] = bayes_mv_train(PCA_train_m_x, train_m_y);
+
+% testing
+fprintf('\nPredicate using Bayes classifier.\n');
+y_bayes = bayes_mv_predicate(PCA_test_x, Mu, Sigma);
+
+% show statistics 
+fprintf('\nUsing Bayes classifier. The Result:\n');
+[conf_mtx all_error] = make_statistics(test_y, y_bayes);
+
+fprintf('\nUsing KNN classifier.\n');
+knn_model = ClassificationKNN.fit(train_m_x, train_m_y, 'NumNeighbors', 5);
+
+% testing
+fprintf('\nPredicate using KNN classifier.\n');
+y_knn = predict(knn_model, test_x);
+
+% show result
+fprintf('\nUsing KNN classifier. The Result:\n');
+[conf_mtx all_error] = make_statistics(test_y, y_knn);
 
 
+%%
+% (4) using 1000 data set, improved classifier using gradient feature
+% guassian, KNN, PCA,  
 
-%(4)
-% generate statistics for report
-% conf_mtx  : confusion matrix
-% all_error : overall error rate
-switch classifier
-    case BAYES
-        fprintf('\nUsing Bayes classifier. The Result:\n');
-        [conf_mtx all_error] = make_statistics(test_y, y_bayes);
-        [conf_mtx_m all_error_m] = make_statistics(test_y, y_bayes_m);
-        fprintf('\nImproved in error rate: %f\n', all_error - all_error_m);
-        
-    case KNN
-        fprintf('\nUsing KNN classifier. The Result:\n');
-        [conf_mtx all_error] = make_statistics(test_y, y_knn);
-        [conf_mtx_m all_error_m] = make_statistics(test_y, y_knn_m);
-        fprintf('\nImproved in error rate: %f\n', all_error - all_error_m);
-        
-    otherwise
-        fprintf('\nUnknown classifier\n');
-end
+% PCA feature extraction 
+max_PCs = 62;
+[T] = PCA(g_train_m_x, max_PCs);
+PCA_train_m_x = g_train_m_x*T;
+PCA_test_x = g_test_x*T;
 
+% training
+fprintf('\nUsing Bayes classifier.\n');
+[Mu Sigma] = bayes_mv_train(PCA_train_m_x, train_m_y);
 
+% testing
+fprintf('\nPredicate using Bayes classifier.\n');
+y_bayes = bayes_mv_predicate(PCA_test_x, Mu, Sigma);
+
+% show statistics 
+fprintf('\nUsing Bayes classifier. The Result:\n');
+[conf_mtx all_error] = make_statistics(test_y, y_bayes);
 
 
+max_PCs = 30;
+[T] = PCA(g_train_m_x, max_PCs);
+PCA_train_m_x = g_train_m_x*T;
+PCA_test_x = g_test_x*T;
 
+fprintf('\nUsing KNN classifier.\n');
+knn_model = ClassificationKNN.fit(PCA_train_m_x, g_train_m_y, 'NumNeighbors', 3);
 
+% testing
+fprintf('\nPredicate using KNN classifier.\n');
+y_knn = predict(knn_model, PCA_test_x);
+
+% show result
+fprintf('\nUsing KNN classifier. The Result:\n');
+[conf_mtx all_error] = make_statistics(test_y, y_knn);
 

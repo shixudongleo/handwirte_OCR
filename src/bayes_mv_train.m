@@ -8,20 +8,15 @@ function [ Mu Sigma ] = bayes_mv_train(x, y)
 % Mu    :   mean for gaussian 
 % Sigma :   Sigma for gaussian
 
-% PCA of training data
-[coff pca] = princomp(x);
-
 label = 0:9;
-dim = 300;
-
+dim = size(x, 2);
 Mu = zeros(length(label), dim);
 Sigma = ones(length(label), dim);
 
 
 for ii = label
     index = find(y == ii);
-    train_x = pca(index, 1:dim);
-    n = size(train_x, 1);
+    train_x = x(index, :);
     gaussian = gmdistribution.fit(train_x, 1,'CovType', 'diagonal',...
                                   'Regularize', 0.001);
                               

@@ -24,7 +24,8 @@ else
        % gradient feature
        gradient = get_gradient_fv(image);
 
-       fv = [region_stats gradient];
+       %fv = [region_stats gradient];
+       fv = [gradient];
        fv_vectors(imnum, :) = fv;
     end
 
@@ -67,10 +68,10 @@ g_y = imfilter(double(image), h_y, 'replicate');
 
 g_x = reshape(g_x, 1, dim);
 g_y = reshape(g_y, 1, dim);
-gradient_fv = sqrt(g_x.^2 + g_y.^2);
+% gradient_fv = sqrt(g_x.^2 + g_y.^2);
 
 % can also return g_x g_y directly for more dimensional data
-% gradient_fv = [gx_ g_y];
+gradient_fv = [g_x g_y];
 
 end
 
